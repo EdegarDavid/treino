@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Treinos">
+    <title>Treinos</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Diario de treino</p>
+          <h1>Treinos</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-button" id="syncButton" type="button" title="Sincronizar" aria-label="Sincronizar">↻</button>
+          <button class="icon-button" id="exportButton" type="button" title="Exportar dados" aria-label="Exportar dados">↓</button>
+        </div>
+      </header>
+
+      <section class="sync-card" aria-label="Sincronizacao">
+        <div>
+          <strong id="syncTitle">Modo local</strong>
+          <span id="syncStatus">Configure a URL do Google Apps Script para salvar no Google Sheets.</span>
+        </div>
+        <button id="settingsButton" type="button">Configurar</button>
+      </section>
+
+      <section class="summary" aria-label="Resumo">
+        <article>
+          <span id="totalWorkouts">0</span>
+          <small>treinos</small>
+        </article>
+        <article>
+          <span id="weekWorkouts">0</span>
+          <small>na semana</small>
+        </article>
+        <article>
+          <span id="lastWorkout">-</span>
+          <small>ultimo</small>
+        </article>
+      </section>
+
+      <nav class="tabs" aria-label="Secoes">
+        <button class="tab is-active" data-tab="today" type="button">Hoje</button>
+        <button class="tab" data-tab="progress" type="button">Progresso</button>
+        <button class="tab" data-tab="history" type="button">Historico</button>
+        <button class="tab" data-tab="library" type="button">Exercicios</button>
+      </nav>
+
+      <section class="panel is-active" id="todayPanel">
+        <form class="workout-form" id="workoutForm">
+          <label>
+            Data
+            <input id="workoutDate" name="date" type="date" required>
+          </label>
+          <label>
+            Tipo
+            <select id="workoutType" name="type">
+              <option>Musculacao</option>
+              <option>Corrida</option>
+              <option>Bicicleta</option>
+              <option>Natacao</option>
+              <option>Funcional</option>
+              <option>Mobilidade</option>
+              <option>Outro</option>
+            </select>
+          </label>
+          <label class="full">
+            Nome do treino
+            <input id="workoutName" name="name" type="text" placeholder="Ex.: Peito e triceps" required>
+          </label>
+
+          <div class="exercise-editor full">
+            <div class="section-title">
+              <h2>Exercicios</h2>
+              <button id="addExerciseButton" type="button">Adicionar</button>
+            </div>
+            <div id="exerciseRows" class="exercise-rows"></div>
+          </div>
+
+          <label class="full">
+            Observacoes
+            <textarea id="workoutNotes" name="notes" rows="3" placeholder="Sono, carga, sensacao, dor, energia..."></textarea>
+          </label>
+
+          <button class="primary full" type="submit">Salvar treino</button>
+        </form>
+      </section>
+
+      <section class="panel" id="progressPanel">
+        <div class="section-title">
+          <h2>Progressao de carga</h2>
+          <select id="progressExercise" aria-label="Exercicio para progressao"></select>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="progressChart" width="680" height="320" aria-label="Grafico de progressao"></canvas>
+        </div>
+        <div id="progressStats" class="progress-stats"></div>
+      </section>
+
+      <section class="panel" id="historyPanel">
+        <div class="section-title">
+          <h2>Historico</h2>
+          <button id="clearButton" type="button">Limpar</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+
+      <section class="panel" id="libraryPanel">
+        <div class="section-title">
+          <h2>Exercicios salvos</h2>
+          <label class="import-button">
+            Importar
+            <input id="importInput" type="file" accept="application/json">
+          </label>
+        </div>
+        <div id="exerciseLibrary" class="library-list"></div>
+      </section>
+    </main>
+
+    <dialog id="settingsDialog">
+      <form method="dialog" class="settings-form">
+        <div class="section-title">
+          <h2>Google Sheets</h2>
+          <button class="plain-button" value="cancel" aria-label="Fechar">×</button>
+        </div>
+        <label>
+          URL do Apps Script
+          <input id="apiUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+        </label>
+        <p class="note">Depois de publicar o Apps Script, cole a URL aqui. O app sincroniza os treinos com a planilha e tambem mantem uma copia local.</p>
+        <menu>
+          <button value="cancel" type="button" id="cancelSettings">Cancelar</button>
+          <button class="primary" value="default" type="submit">Salvar</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <template id="exerciseTemplate">
+      <div class="exercise-row">
+        <input class="exercise-name" type="text" placeholder="Exercicio" list="exerciseOptions" required>
+        <div class="metrics">
+          <input class="exercise-sets" type="number" min="0" inputmode="numeric" placeholder="Series">
+          <input class="exercise-reps" type="number" min="0" inputmode="numeric" placeholder="Reps">
+          <input class="exercise-load" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Carga kg">
+        </div>
+        <button class="remove-row" type="button" title="Remover exercicio" aria-label="Remover exercicio">×</button>
+      </div>
+    </template>
+
+    <datalist id="exerciseOptions"></datalist>
+    <script src="app.js" defer></script>
+  </body>
+</html>
