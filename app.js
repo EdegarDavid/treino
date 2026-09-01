@@ -88,11 +88,12 @@ function renderSummary() {
 }
 
 function renderSyncStatus() {
-  $("#apiUrlInput").value = state.apiUrl;
+  const apiInput = $("#apiUrlInput");
+  if (apiInput) apiInput.value = state.apiUrl;
   $("#syncTitle").textContent = state.apiUrl ? "Google Sheets conectado" : "Modo local";
   $("#syncStatus").textContent = state.apiUrl
     ? `Ultima sincronizacao: ${state.lastSync ? new Date(state.lastSync).toLocaleString("pt-BR") : "ainda nao feita"}`
-    : "Configure a URL do Google Apps Script para salvar no Google Sheets.";
+    : "Sincroniza automaticamente com Google Sheets quando configurado.";
 }
 
 function renderHistory() {
@@ -355,16 +356,7 @@ function bindEvents() {
   $("#addExerciseButton").addEventListener("click", () => addExerciseRow());
   $("#exportButton").addEventListener("click", exportData);
   $("#syncButton").addEventListener("click", () => syncToSheets("load"));
-  $("#settingsButton").addEventListener("click", () => $("#settingsDialog").showModal());
-  $("#cancelSettings").addEventListener("click", () => $("#settingsDialog").close());
-  $("#settingsDialog").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    state.apiUrl = $("#apiUrlInput").value.trim();
-    saveState();
-    $("#settingsDialog").close();
-    render();
-    await syncToSheets("load");
-  });
+  // settings dialog removed — app uses DEFAULT_API_URL from code
   $("#importInput").addEventListener("change", (event) => {
     const [file] = event.target.files;
     if (file) importData(file);

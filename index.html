@@ -28,9 +28,9 @@
       <section class="sync-card" aria-label="Sincronizacao">
         <div>
           <strong id="syncTitle">Modo local</strong>
-          <span id="syncStatus">Configure a URL do Google Apps Script para salvar no Google Sheets.</span>
+          <span id="syncStatus">Sincroniza automaticamente com Google Sheets quando configurado.</span>
         </div>
-        <button id="settingsButton" type="button">Configurar</button>
+        
       </section>
 
       <section class="summary" aria-label="Resumo">
@@ -126,23 +126,7 @@
       </section>
     </main>
 
-    <dialog id="settingsDialog">
-      <form method="dialog" class="settings-form">
-        <div class="section-title">
-          <h2>Google Sheets</h2>
-          <button class="plain-button" value="cancel" aria-label="Fechar">×</button>
-        </div>
-        <label>
-          URL do Apps Script
-          <input id="apiUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec">
-        </label>
-        <p class="note">Depois de publicar o Apps Script, cole a URL aqui. O app sincroniza os treinos com a planilha e tambem mantem uma copia local.</p>
-        <menu>
-          <button value="cancel" type="button" id="cancelSettings">Cancelar</button>
-          <button class="primary" value="default" type="submit">Salvar</button>
-        </menu>
-      </form>
-    </dialog>
+    <!-- Config dialog removed: app auto-uses default Apps Script URL -->
 
     <template id="exerciseTemplate">
       <div class="exercise-row">
