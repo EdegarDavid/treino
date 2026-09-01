@@ -95,3 +95,29 @@ Observações:
 Depois de colar a URL no app, clique em `Sincronizar` para carregar os treinos existentes (se houver) e testar o salvamento automático quando você salvar novos treinos.
 
 Se quiser, eu posso gerar o arquivo do Apps Script pronto para colar — quer que eu gere isso agora?
+
+## URL do Web App (deploy)
+
+O app já foi configurado para usar um Web App do Google Apps Script. A URL atual do Web App é:
+
+https://script.google.com/macros/s/AKfycbx4P2pES1r7r7onQ_r0Qk_OPD796mqsNRUOcEejExDy5BLzVgKYvAqyUsRyAynkrA/exec
+
+Observações rápidas:
+- O botão `Configurar` foi removido: o app usa esta URL por padrão e tenta sincronizar automaticamente ao abrir.
+- Se quiser usar outra URL, edite `app.js` (variável `DEFAULT_API_URL`) ou limpe o `localStorage` do app.
+
+Comandos de teste (substitua a URL acima se mudar):
+
+Health check (GET):
+```bash
+curl 'https://script.google.com/macros/s/AKfycbx4P2pES1r7r7onQ_r0Qk_OPD796mqsNRUOcEejExDy5BLzVgKYvAqyUsRyAynkrA/exec'
+```
+
+Salvar um treino de exemplo (POST):
+```bash
+curl -X POST 'https://script.google.com/macros/s/AKfycbx4P2pES1r7r7onQ_r0Qk_OPD796mqsNRUOcEejExDy5BLzVgKYvAqyUsRyAynkrA/exec' \
+	-H 'Content-Type: application/json' \
+	-d '{"action":"save","workouts":[{"id":"t1","createdAt":"2026-08-31T00:00:00Z","date":"2026-08-31","type":"Musculacao","name":"Teste","notes":"ok","exercises":[{"name":"Supino","sets":3,"reps":8,"load":60}]}]}'
+```
+
+Se precisar que eu substitua essa URL por outra, ou que eu coloque instruções mais detalhadas em [README.md](README.md), me avise.
