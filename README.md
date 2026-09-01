@@ -19,3 +19,79 @@ Se o repositorio tiver outros arquivos, voce tambem pode publicar somente esta p
 3. Escolha `Adicionar a Tela de Inicio`.
 
 Os dados ficam salvos no proprio aparelho via `localStorage`. Use o botao de exportar para fazer backup em JSON.
+
+## Salvar no Google Sheets (Apps Script)
+
+Se voce quiser manter os registros online em um Google Sheets, pode usar um pequeno *web app* do Google Apps Script que recebe os treinos e grava linhas na planilha.
+
+Passos rápidos:
+
+1. Crie uma planilha no Google Sheets e anote o ID na URL (a parte entre `/d/` e `/edit`).
+2. No menu da planilha, abra `Extensões > Apps Script` e crie um novo script.
+3. Cole o código abaixo no editor e substitua `SHEET_ID` e `SHEET_NAME` pelos valores da sua planilha.
+4. Salve e escolha `Deploy > New deployment` → `Web app`.
+	 - Execute como: `Me` (sua conta)
+	 - Quem tem acesso: `Anyone` (ou `Anyone, even anonymous` se disponível)
+5. Copie a URL do deploy e cole em `Configurar` no app (botao de engrenagem).
+
+Apps Script (cole no editor do Apps Script):
+
+```javascript
+// Substitua pelas suas configurações
+const SHEET_ID = 'SHEET_ID_HERE';
+const SHEET_NAME = 'Sheet1';
+
+function ensureHeader(sheet) {
+	if (sheet.getLastRow() === 0) {
+		sheet.appendRow(['id','createdAt','date','type','workoutName','notes','exercise','sets','reps','load']);
+	}
+}
+
+function doPost(e) {
+	try {
+		const payload = JSON.parse(e.postData.contents || '{}');
+		const ss = SpreadsheetApp.openById(SHEET_ID);
+		const sheet = ss.getSheetByName(SHEET_NAME);
+		if (!sheet) return ContentService.createTextOutput(JSON.stringify({ok:false, error:'Sheet not found'})).setMimeType(ContentService.MimeType.JSON);
+		ensureHeader(sheet);
+
+		if (payload.action === 'save' && Array.isArray(payload.workouts)) {
+			const rows = [];
+			payload.workouts.forEach(w => {
+				(w.exercises || []).forEach(ex => {
+					rows.push([w.id, w.createdAt, w.date, w.type, w.name, w.notes || '', ex.name || '', ex.sets || 0, ex.reps || 0, ex.load || 0]);
+				});
+			});
+			if (rows.length) sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+			return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+		}
+
+		if (payload.action === 'load') {
+			const values = sheet.getDataRange().getValues();
+			const rows = values.slice(1);
+			const map = {};
+			rows.forEach(r => {
+				const [id, createdAt, date, type, workoutName, notes, exercise, sets, reps, load] = r;
+				if (!id) return;
+				if (!map[id]) map[id] = { id: String(id), createdAt: String(createdAt), date: String(date), type: String(type), name: String(workoutName), notes: String(notes || ''), exercises: [] };
+				map[id].exercises.push({ name: String(exercise || ''), sets: Number(sets || 0), reps: Number(reps || 0), load: Number(load || 0) });
+			});
+			const workouts = Object.values(map).sort((a,b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+			return ContentService.createTextOutput(JSON.stringify({ok:true, workouts})).setMimeType(ContentService.MimeType.JSON);
+		}
+
+		return ContentService.createTextOutput(JSON.stringify({ok:false, error:'acao desconhecida'})).setMimeType(ContentService.MimeType.JSON);
+	} catch (err) {
+		return ContentService.createTextOutput(JSON.stringify({ok:false, error: String(err)})).setMimeType(ContentService.MimeType.JSON);
+	}
+}
+```
+
+Observações:
+
+- O script grava cada exercício como uma linha separada (uma linha = um exercício em um treino). Ele também implementa `action: 'load'` retornando os treinos lidos da planilha, assim o app pode sincronizar o histórico.
+- Se preferir segurança extra, restrinja o acesso do web app a `Only myself` e implemente OAuth no cliente (mais complexo).
+
+Depois de colar a URL no app, clique em `Sincronizar` para carregar os treinos existentes (se houver) e testar o salvamento automático quando você salvar novos treinos.
+
+Se quiser, eu posso gerar o arquivo do Apps Script pronto para colar — quer que eu gere isso agora?

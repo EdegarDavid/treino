@@ -228,10 +228,25 @@ function renderProgressStats(points) {
   const bestLoad = Math.max(...points.map((point) => point.load));
   const bestVolume = Math.max(...points.map((point) => point.volume));
   const delta = last.load - first.load;
+  // Suggestion: simple rule based on last recorded reps
+  // If last reps >= target -> suggest increasing by PROGRESSION_INCREMENT
+  const lastReps = points[points.length - 1].reps || 0;
+  const lastSets = points[points.length - 1].sets || 0;
+  const lastLoad = last.load || 0;
+  let suggestion = 'Sem sugestao';
+  if (lastLoad > 0) {
+    if (lastReps >= PROGRESSION_TARGET_REPS) {
+      suggestion = `Tente ${lastLoad + PROGRESSION_INCREMENT} kg (aumentar ${PROGRESSION_INCREMENT} kg)`;
+    } else {
+      suggestion = `Mantenha ${lastLoad} kg e foque em atingir ${PROGRESSION_TARGET_REPS} reps`;
+    }
+  }
+
   box.innerHTML = `
     <article><strong>${bestLoad} kg</strong><span>maior carga</span></article>
-    <article><strong>${delta >= 0 ? "+" : ""}${delta} kg</strong><span>evolucao</span></article>
+    <article><strong>${delta >= 0 ? '+' : ''}${delta} kg</strong><span>evolucao</span></article>
     <article><strong>${Math.round(bestVolume)} kg</strong><span>maior volume</span></article>
+    <article><strong>${escapeHtml(suggestion)}</strong><span>sugestao</span></article>
   `;
 }
 
