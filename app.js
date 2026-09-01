@@ -282,21 +282,43 @@ function setActiveTab(name) {
 }
 
 async function syncToSheets(action = "save") {
-  if (!state.apiUrl) return;
-  $("#syncStatus").textContent = "Sincronizando...";
+  if (!state.apiUrl) {
+    console.warn('syncToSheets: apiUrl nao configurada');
+    $("#syncStatus").textContent = "Configure a URL do Apps Script antes de sincronizar.";
+    return;
+  }
+
+  const btn = $("#syncButton");
+  const prevDisabled = btn.disabled;
+  const prevText = btn.textContent;
   try {
+    btn.disabled = true;
+    btn.classList.add('is-busy');
+    console.log('syncToSheets start', { action, apiUrl: state.apiUrl, workouts: state.workouts.length });
+    $("#syncStatus").textContent = "Sincronizando...";
     const response = await fetch(state.apiUrl, {
       method: "POST",
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, workouts: state.workouts }),
     });
-    const payload = await response.json();
+    const payloadText = await response.text();
+    let payload;
+    try { payload = JSON.parse(payloadText || '{}'); } catch (e) { payload = { ok: false, error: 'Resposta invalida: ' + payloadText }; }
     if (!payload.ok) throw new Error(payload.error || "Falha na sincronizacao");
     if (Array.isArray(payload.workouts)) state.workouts = payload.workouts;
     state.lastSync = new Date().toISOString();
     saveState();
     render();
+    console.log('syncToSheets ok');
+    $("#syncStatus").textContent = `Ultima sincronizacao: ${new Date(state.lastSync).toLocaleString('pt-BR')}`;
   } catch (error) {
+    console.error('syncToSheets error', error);
     $("#syncStatus").textContent = "Nao foi possivel sincronizar. Os dados locais foram mantidos.";
+    alert('Erro ao sincronizar: ' + (error && error.message ? error.message : error));
+  } finally {
+    btn.disabled = prevDisabled;
+    btn.classList.remove('is-busy');
+    btn.textContent = prevText;
   }
 }
 
