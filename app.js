@@ -409,3 +409,10 @@ loadState();
 bindEvents();
 resetForm();
 render();
+// Auto-save default API URL and auto-load from Sheets if available
+if (state.apiUrl) {
+  saveState();
+  setTimeout(() => {
+    syncToSheets('load').catch(() => {});
+  }, 200);
+}
