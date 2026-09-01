@@ -7,6 +7,9 @@ const state = {
   lastSync: "",
 };
 
+// Preencher com a URL do Apps Script fornecida pelo usuario
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbx4P2pES1r7r7onQ_r0Qk_OPD796mqsNRUOcEejExDy5BLzVgKYvAqyUsRyAynkrA/exec';
+
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const today = new Date().toISOString().slice(0, 10);
@@ -14,7 +17,7 @@ const today = new Date().toISOString().slice(0, 10);
 function loadState() {
   const saved = readJson(STORAGE_KEY) || readJson(LEGACY_STORAGE_KEY) || {};
   state.workouts = Array.isArray(saved.workouts) ? saved.workouts : [];
-  state.apiUrl = saved.apiUrl || "";
+  state.apiUrl = saved.apiUrl || DEFAULT_API_URL || "";
   state.lastSync = saved.lastSync || "";
 }
 
